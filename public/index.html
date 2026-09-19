@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101513"><meta name="description" content="上传教材电路图，在原理图上观察电流流动，比较输入输出波形。一个面向模电学习的交互实验台。">
+  <title>观电 · 把原理图变成实验</title>
+  <link rel="icon" type="image/svg+xml" href="./mark.svg"><link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="观电首页"><img src="./mark.svg" width="35" height="35" alt=""><span>观电<span class="brand-en">CIRCUIT NOTEBOOK</span></span><span class="version">LAB 01</span></a>
+    <div class="top-note"><span class="live-dot"></span>把原理图变成实验</div>
+    <div class="top-actions"><button id="helpBtn" class="icon-button" aria-label="使用帮助" title="使用帮助"><span data-icon="help"></span></button><button id="settingsBtn" class="button subtle"><span data-icon="settings"></span><span>识别设置</span><span class="config-dot" id="configDot"></span></button></div>
+  </header>
+  <main class="app-layout">
+    <aside class="library">
+      <div class="section-eyebrow">YOUR CIRCUIT, IN MOTION</div>
+      <h1>让电路，<br><span>动起来。</span></h1>
+      <p class="intro">从书页到实验台。<br>看见电流，读懂波形。</p>
+      <button class="upload-card" id="uploadBtn"><span class="upload-icon" data-icon="scan"></span><strong>上传电路截图</strong><span>或将图片拖到这里</span><small>PNG / JPG / WEBP · Ctrl+V 粘贴</small><span class="upload-arrow" data-icon="arrow"></span></button>
+      <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      <div class="library-heading"><span>先从一个电路开始</span><span class="muted mono">04</span></div>
+      <nav class="preset-list" id="presetList" aria-label="示例电路"></nav>
+      <div class="library-bottom"><button id="importBtn" class="text-button"><span data-icon="file"></span>导入已有电路<span class="kbd">.txt / .json</span></button><input type="file" id="circuitInput" accept=".txt,.json,.circuit" hidden><button id="textImportBtn" class="text-button"><span data-icon="code"></span>粘贴电路文本</button></div>
+      <div class="library-footer"><span class="tiny-circuit"></span><span>边看书，边验证。</span><button id="aboutBtn">关于</button></div>
+    </aside>
+    <section class="workspace" aria-label="电路实验台">
+      <div class="workspace-heading"><div><div class="breadcrumb">实验台 <span>/</span> <span id="circuitOrigin">示例电路</span></div><h2 id="circuitTitle">共射极放大器</h2></div><button id="saveBtn" class="button subtle"><span data-icon="download"></span>保存电路</button></div>
+      <div class="work-grid">
+        <div class="experiment-column">
+          <section class="sim-panel">
+            <div class="sim-toolbar"><div class="running-status" id="runningStatus"><span class="live-dot"></span><span>正在启动</span></div><span class="sim-time mono" id="simTime">t = 0.000 s</span><div class="sim-tools"><label class="speed-control" title="仿真速度"><span data-icon="speed"></span><select id="speedSelect" aria-label="仿真速度"><option value="10">慢速</option><option value="50" selected>标准</option><option value="250">快速</option></select></label><button id="resetBtn" class="icon-button" aria-label="重置仿真" title="重置仿真"><span data-icon="reset"></span></button><button id="playBtn" class="button play" disabled><span data-icon="pause"></span><span>暂停</span></button></div></div>
+            <div class="sim-canvas-wrap" id="simWrap"><iframe id="circuitFrame" title="可交互的电路仿真画布" src="about:blank"></iframe><div class="engine-loading" id="engineLoading"><span class="loader"></span><strong>正在启动实验台</strong><span>载入本地电路引擎…</span></div></div>
+            <div class="sim-caption"><span><i class="flow-key"></i>光点沿约定电流方向流动</span><button id="editModeBtn" class="text-button small"><span data-icon="edit"></span>编辑电路</button><span class="desktop-hint">双击元件改参数 · 滚轮缩放</span></div>
+          </section>
+          <section class="scope-panel">
+            <div class="panel-heading"><div class="panel-title"><span data-icon="wave"></span><h3>波形观察</h3><span class="small-tag" id="scopeStatus">实时</span></div><div class="scope-actions"><label class="scope-range">时间窗 <select id="timeWindow" aria-label="波形时间窗口"><option value="0.002">2 ms</option><option value="0.005">5 ms</option><option value="0.01">10 ms</option><option value="0.025" selected>25 ms</option><option value="0.04">40 ms</option><option value="0.1">100 ms</option><option value="0.5">500 ms</option></select></label><button id="exportCsvBtn" class="icon-button" title="导出波形 CSV" aria-label="导出波形 CSV"><span data-icon="download"></span></button></div></div>
+            <div class="channel-bar"><label class="channel ch-a"><span>CH1</span><select id="channelA" aria-label="通道一测量点"></select><b id="valueA" class="mono">—</b></label><label class="channel ch-b"><span>CH2</span><select id="channelB" aria-label="通道二测量点"></select><b id="valueB" class="mono">—</b></label><label class="ac-coupling"><input id="acCoupling" type="checkbox"><span>去直流</span></label></div>
+            <div class="scope-canvas-wrap"><canvas id="scopeCanvas" aria-label="电压或电流随时间变化的双通道波形图"></canvas><div class="scope-empty" id="scopeEmpty">等待仿真数据</div></div>
+            <div class="scope-readings"><div><span>CH1 峰峰值</span><strong id="vppA" class="mono">—</strong></div><div><span>CH2 峰峰值</span><strong id="vppB" class="mono">—</strong></div><div><span>幅度比 |CH2/CH1|</span><strong id="gainValue" class="mono">—</strong></div><span class="axis-note" id="axisNote">左右独立纵轴 · 横轴时间</span></div>
+          </section>
+        </div>
+        <aside class="inspector">
+          <section class="inspection-card"><div class="inspector-title"><span data-icon="sliders"></span><h3>调一调，看变化</h3></div><label class="field-label" for="componentSelect">选择元件</label><select id="componentSelect" class="wide-select"></select><div id="componentFields" class="component-fields"></div><button id="applyComponentBtn" class="button full apply-button">应用并重新运行<span data-icon="arrow"></span></button><p class="field-help">数值支持 4.7k、100n、10u 等写法</p><div class="meter-box"><span>元件两端电压</span><strong id="componentVoltage" class="mono">—</strong><span>支路电流</span><strong id="componentCurrent" class="mono">—</strong></div></section>
+          <section class="reading-card"><div class="inspector-title"><span data-icon="book"></span><h3>观察笔记</h3></div><p id="circuitSummary"></p><div class="question-heading">试着观察</div><ul id="questions"></ul><details class="model-notes"><summary>模型与假设 <span id="assumptionCount"></span></summary><ul id="assumptions"></ul></details></section>
+        </aside>
+      </div>
+      <section id="sourcePanel" class="source-panel" hidden><div class="panel-heading"><div class="panel-title"><span data-icon="image"></span><h3>原图对照</h3><span id="sourceName" class="muted"></span></div><button id="openSourceBtn" class="text-button small">放大原图<span data-icon="expand"></span></button></div><div class="source-content"><img id="sourceThumb" alt="上传的教材电路原图"><div><strong>从原图核对这些地方</strong><p>元件数值、三极管引脚、交叉线是否相连。识别结果可以直接在画布里修正。</p><button class="text-button" id="reRecognizeBtn">重新识别<span data-icon="arrow"></span></button></div></div></section>
+      <footer class="workspace-footer"><span>观电 · 一个属于你的模电实验台</span><button id="engineNoticeBtn">Powered by CircuitJS · 开源说明</button></footer>
+    </section>
+  </main>
+
+  <dialog id="uploadDialog" class="modal upload-modal"><form method="dialog" class="modal-close"><button class="icon-button" aria-label="关闭"><span data-icon="close"></span></button></form><div class="modal-eyebrow">FROM THE PAGE TO THE LAB</div><h2>把这张图，变成电路。</h2><p class="modal-subtitle">上传后先识别，核对元件与连接，再开始仿真。</p><div class="upload-preview" id="uploadPreview"><img id="uploadImage" alt="待识别的电路截图"></div><div class="upload-file-meta"><span id="uploadFileName"></span><button id="replaceImageBtn" class="text-button small">更换图片</button></div><label class="field-label" for="imageInstruction">补充说明 <span class="muted">可选</span></label><textarea id="imageInstruction" rows="2" placeholder="例如：图中 VCC 为 12V，重点观察输入和输出波形。"></textarea><div id="recognitionResult" class="recognition-result" hidden></div><div id="recognitionStatus" class="recognition-status" role="status" hidden></div><div id="recognitionConfigNote" class="inline-note"><span data-icon="key"></span><span>自动识别需要接入视觉模型 API。<button id="uploadSettingsBtn" class="inline-link">设置接口</button></span></div><div class="modal-actions"><button id="referenceOnlyBtn" class="button subtle">先作为原图对照</button><button id="cancelRecognitionBtn" class="button subtle" hidden>取消识别</button><button id="recognizeBtn" class="button primary"><span data-icon="spark"></span>识别并重建</button><button id="loadRecognizedBtn" class="button primary" hidden>载入识别电路<span data-icon="arrow"></span></button></div><p class="privacy-note">识别时图片发送至你设置的模型接口；仅作对照时不发送。</p></dialog>
+
+  <dialog id="settingsDialog" class="modal settings-modal"><form method="dialog" class="modal-close"><button class="icon-button" aria-label="关闭"><span data-icon="close"></span></button></form><div class="modal-eyebrow">VISION CONNECTION</div><h2>接上识图能力。</h2><p class="modal-subtitle">配置一个支持图像输入的模型接口，即可从截图生成电路。</p><form id="settingsForm"><label class="field-label" for="apiProtocol">接口协议</label><select id="apiProtocol" class="wide-select"><option value="chat">Chat Completions 兼容接口</option><option value="responses">OpenAI Responses</option></select><label class="field-label" for="apiBase">API 地址</label><input id="apiBase" type="url" placeholder="https://api.example.com/v1" required autocomplete="off"><label class="field-label" for="apiModel">视觉模型名称</label><input id="apiModel" placeholder="填写你的服务商提供的模型 ID" required autocomplete="off"><label class="field-label" for="apiKey">API Key</label><input id="apiKey" type="password" placeholder="仅在当前页面会话中使用" required autocomplete="off"><p class="field-help">地址和模型名称保存在此浏览器。密钥只保留在当前页面内存中，刷新后需重填；请求经应用服务器转发，服务器不保存密钥。</p><div id="settingsStatus" role="status" class="form-status"></div><div class="modal-actions"><button type="button" id="clearSettingsBtn" class="button subtle">清除设置</button><button type="submit" class="button primary">保存设置<span data-icon="check"></span></button></div></form></dialog>
+
+  <dialog id="textDialog" class="modal"><form method="dialog" class="modal-close"><button class="icon-button" aria-label="关闭"><span data-icon="close"></span></button></form><div class="modal-eyebrow">CIRCUIT TEXT</div><h2>粘贴可运行的电路。</h2><p class="modal-subtitle">支持 CircuitJS / Falstad 导出的文本，也可以导入本应用的 JSON。</p><textarea id="circuitText" class="code-input" rows="12" spellcheck="false" placeholder="$ 1 0.000005 3 55 5 50&#10;..."></textarea><div id="textImportStatus" role="status" class="form-status"></div><div class="modal-actions"><button id="copyCurrentBtn" class="button subtle">填入当前电路</button><button id="loadTextBtn" class="button primary">载入电路<span data-icon="arrow"></span></button></div></dialog>
+
+  <dialog id="helpDialog" class="modal help-modal"><form method="dialog" class="modal-close"><button class="icon-button" aria-label="关闭"><span data-icon="close"></span></button></form><div class="modal-eyebrow">A LITTLE GUIDE</div><h2>从“看见”开始理解。</h2><div class="help-step"><span>01</span><div><h3>选电路，或者上传截图</h3><p>四个示例可以立即运行。上传图片后配置视觉模型接口，识别结果会先展示摘要和假设，再由你载入。</p></div></div><div class="help-step"><span>02</span><div><h3>让电流和波形一起说话</h3><p>画布中光点按约定电流方向移动，速度为视觉示意，不代表电子真实速度。波形与元件读数都来自仿真计算。CH1、CH2 可选择节点电压或支路电流。</p></div></div><div class="help-step"><span>03</span><div><h3>改一个值，验证一个想法</h3><p>右侧修改常用参数，或双击画布中的元件。点“编辑电路”展开引擎菜单，可以添加元件、连线和测量。去直流仅改变波形显示，不改变电路。</p></div></div><p class="inline-note">保存会下载包含电路、原图和笔记的 JSON；API Key 不会写入文件。波形可以另存为 CSV。</p><div class="help-about">仿真引擎 CircuitJS1，作者 Paul Falstad、Iain Sharp 及贡献者。<a href="./engine/NOTICE.txt" target="_blank" rel="noopener">开源说明</a> · <a href="./engine/COPYING.txt" target="_blank" rel="noopener">GPL 许可证</a></div></dialog>
+  <dialog id="sourceDialog" class="modal source-modal"><form method="dialog" class="modal-close"><button class="icon-button" aria-label="关闭"><span data-icon="close"></span></button></form><img id="sourceFullImage" alt="放大的电路原图"></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <script src="./engine/lz-string.min.js"></script>
+  <script type="module" src="./app.js"></script>
+</body></html>

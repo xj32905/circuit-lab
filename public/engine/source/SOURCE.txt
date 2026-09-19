@@ -1,0 +1,3 @@
+Upstream source snapshot: 5bdb1296ce6a82f79515f4f1dd1b9a86e03236f7
+Repository: https://github.com/pfalstad/circuitjs1
+Browser assets downloaded from upstream public distribution, 2026-09-19.
