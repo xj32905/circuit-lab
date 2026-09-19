@@ -73,7 +73,7 @@ function loadCircuit(circuit,{source=state.source,origin}={}){
 function elementName(index,type){
   const own=state.current.components?.find(c=>c.element===index);
   if(own)return `${own.id} · ${own.name}`;
-  const names={ResistorElm:'电阻',CapacitorElm:'电容',InductorElm:'电感',RailElm:'信号源',VoltageElm:'电压源',TransistorElm:'三极管',OpAmpElm:'运算放大器',DiodeElm:'二极管',OutputElm:'输出',SwitchElm:'开关',GroundElm:'地',WireElm:'导线',LabeledNodeElm:'节点标签',CurrentElm:'电流源'};
+  const names={ResistorElm:'电阻',CapacitorElm:'电容',InductorElm:'电感',RailElm:'信号源',VoltageElm:'电压源',TransistorElm:'三极管',OpAmpElm:'运算放大器',DiodeElm:'二极管',ZenerElm:'齐纳二极管',OutputElm:'输出',SwitchElm:'开关',GroundElm:'地',WireElm:'导线',LabeledNodeElm:'节点标签',CurrentElm:'电流源'};
   return `${names[type]||type.replace(/Elm$/,'')} ${index+1}`;
 }
 function buildProbes(){
@@ -97,7 +97,7 @@ function refreshElements(){
     const structurallyChanged=!state.loading&&old.length&&(old.length!==state.elements.length||old.some((e,i)=>e.getType()!==state.elements[i]?.getType()));
     if(structurallyChanged){state.current.components=[];state.current.probes=[];state.a=0;state.b=1;scope.clear();}
     buildProbes();const selected=$('componentSelect').value;
-    const editable=[];state.elements.forEach((e,i)=>{if(['ResistorElm','CapacitorElm','InductorElm','RailElm','VoltageElm','TransistorElm','OpAmpElm','SwitchElm','CurrentElm','DiodeElm'].includes(e.getType())){const opt=node('option',elementName(i,e.getType()));opt.value=String(i);editable.push(opt);}});
+    const editable=[];state.elements.forEach((e,i)=>{if(['ResistorElm','CapacitorElm','InductorElm','RailElm','VoltageElm','TransistorElm','OpAmpElm','SwitchElm','CurrentElm','DiodeElm','ZenerElm'].includes(e.getType())){const opt=node('option',elementName(i,e.getType()));opt.value=String(i);editable.push(opt);}});
     $('componentSelect').replaceChildren(...editable);
     if(editable.some(o=>o.value===selected))$('componentSelect').value=selected;
     else if(state.current.input!==undefined&&editable.some(o=>+o.value===state.current.input))$('componentSelect').value=String(state.current.input);
@@ -106,7 +106,7 @@ function refreshElements(){
 }
 function currentExport(){return state.sim?state.sim.exportCircuit():state.current.circuit;}
 function getElementRecords(){return elementRecords(currentExport());}
-const fieldSpecs={r:[['电阻',6,'Ω','positive']],c:[['电容',6,'F','positive']],l:[['电感',6,'H','positive']],i:[['电流',6,'A','any']],t:[['电流放大系数 β',9,'','positive']],a:[['输出上限',6,'V','any'],['输出下限',7,'V','any']],s:[['开关状态',6,'','switch']]};
+const fieldSpecs={r:[['电阻',6,'Ω','positive']],c:[['电容',6,'F','positive']],l:[['电感',6,'H','positive']],i:[['电流',6,'A','any']],t:[['电流放大系数 β',9,'','positive']],a:[['输出上限',6,'V','any'],['输出下限',7,'V','any']],s:[['开关状态',6,'','switch']],z:[['击穿电压',7,'V','positive']]};
 function renderComponent(){
   const index=Number($('componentSelect').value);const record=getElementRecords()[index];const box=$('componentFields');box.replaceChildren();
   if(!record){box.append(node('p','可在画布中双击元件编辑。','component-empty'));$('applyComponentBtn').disabled=true;return;}

@@ -1,6 +1,6 @@
 // CircuitJS text is data, never executable JavaScript.
 const TYPES = new Set(['w','r','c','l','d','z','t','f','j','a','g','v','R','i','s','O','x','207']);
-const MIN_FIELDS = {w:6,r:7,c:8,l:8,d:6,z:7,t:10,f:7,j:7,a:6,g:6,v:10,R:10,i:7,s:8,O:6,x:8,'207':7};
+const MIN_FIELDS = {w:6,r:7,c:8,l:8,d:6,z:8,t:10,f:7,j:7,a:6,g:6,v:10,R:10,i:7,s:8,O:6,x:8,'207':7};
 const FLOAT = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
 
 export function stripScopes(text) {
@@ -37,6 +37,7 @@ export function validateCircuit(text, {strict = false} = {}) {
       if (!/^-?\d+$/.test(t[p]) || Math.abs(+t[p]) > 100000) throw new Error(`第 ${i+1} 行：坐标或标志不是有效整数。`);
     }
     if (['r','c','l'].includes(type) && !(FLOAT.test(t[6]) && +t[6] > 0 && Number.isFinite(+t[6]))) throw new Error(`第 ${i+1} 行：阻值、电容或电感必须为正数。`);
+    if (type === 'z' && !(FLOAT.test(t[6]) && +t[6] > 0 && FLOAT.test(t[7]) && +t[7] > 0)) throw new Error(`第 ${i+1} 行：齐纳二极管的正向压降和击穿电压必须为正数。`);
     if (['v','R'].includes(type) && !t.slice(6,10).every(v => FLOAT.test(v) && Number.isFinite(+v))) throw new Error(`第 ${i+1} 行：信号源参数不正确。`);
     if (['v','R'].includes(type) && (+t[7] < 0 || +t[7] > 1e9)) throw new Error(`第 ${i+1} 行：信号频率超出范围。`);
     if (strict && type === 't' && !['1','-1'].includes(t[6])) throw new Error('三极管类型必须是 NPN（1）或 PNP（-1）。');

@@ -18,6 +18,18 @@ test('model result validation refuses invalid data instead of substituting a tem
   const result=parseAIResult('```json\n'+JSON.stringify({title:'识别图',circuit:PRESETS[1].circuit,assumptions:['输入设为100Hz'],probes:[{element:0,post:0,label:'Vin',quantity:'voltage'}]})+'\n```');
   assert.equal(result.title,'识别图');assert.equal(result.assumptions[0],'输入设为100Hz');assert.equal(result.probes.length,1);
 });
+test('zener records require a positive forward drop and breakdown voltage',()=>{
+  const base='$ 1 0.000005 4 55 5 50\nz 144 144 368 144 1 0.805904783 5.6\nw 144 144 144 240 0\nw 368 144 368 240 0\ng 144 240 144 272 0\n';
+  const checked=validateCircuit(base,{strict:true});assert.equal(checked.count,4);
+  assert.throws(()=>validateCircuit(base.replace(' 5.6','')),/不完整/);
+  assert.throws(()=>validateCircuit(base.replace('5.6','0')),/正数/);
+  assert.throws(()=>validateCircuit(base.replace('5.6','-3')),/正数/);
+});
+test('AI result accepts a zener diode and keeps its label',()=>{
+  const circuit='$ 1 0.000005 4 55 5 50\nz 144 144 368 144 1 0.805904783 5.6\ng 144 144 144 176 0\n';
+  const result=parseAIResult({title:'稳压管',circuit,components:[{element:0,id:'D1',name:'齐纳二极管'}]});
+  assert.match(result.circuit,/^z /m);assert.equal(result.components[0].id,'D1');
+});
 test('invalid timesteps, missing fields and unsupported AI element types fail early',()=>{
   const p=PRESETS[1].circuit;assert.throws(()=>validateCircuit(p.replace('0.000005','0')));
   assert.throws(()=>validateCircuit(p.replace('r 144 176 384 176 0 1000','r 144 176 384 176')));
